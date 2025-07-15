@@ -1,28 +1,36 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 public class GameManager : MonoBehaviour
 {
     [Header("正解数の設定")]
-    public int totalTargets = 3; // 目標の数（配置すべき正解数）
+    public int totalTargets = 3;
+    private int currentCorrect = 0;
+    private bool isCleared = false;
+    private bool canGoNext = false;
 
     [Header("UI 表示")]
-    public TextMeshProUGUI statusText; // 表示用の TMP テキスト
+    public TextMeshProUGUI statusText; // 1 / 3 の表示など
+    public GameObject nextButton; // 次へボタン（任意）
 
-    [Header("クリア時に開くドア")]
-    public GameObject door;           // 回転して開くドアオブジェクト
-    public Animator doorAnimator;     // アニメーションで動かす場合
-    public AudioSource victorySE;     // クリア時の音（任意）
+    [Header("ステージ遷移設定")]
+    public string nextStageName; // 次に進むシーンの名前（Inspectorで入力）
 
-    private int currentCorrect = 0;   // 現在の正解数
-    private bool isCleared = false;   // クリア済みかどうか
+    [Header("クリア演出")]
+    public GameObject door;
+    public Animator doorAnimator;
+    public AudioSource victorySE;
 
     void Start()
     {
-        UpdateStatusText(); // ゲーム開始時に最初の表示
+        UpdateStatusText();
+
+        // 次へボタンを最初は非表示に
+        if (nextButton != null)
+            nextButton.SetActive(false);
     }
 
-    // 正解を報告（1つ成功）
     public void ReportCorrect()
     {
         if (isCleared) return;
@@ -37,7 +45,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // 正解が解除されたとき
     public void ReportCancel()
     {
         if (isCleared) return;
@@ -48,40 +55,56 @@ public class GameManager : MonoBehaviour
         UpdateStatusText();
     }
 
-    // 表示更新
     void UpdateStatusText()
     {
         if (statusText != null)
         {
-            statusText.text = $"{currentCorrect} / {totalTargets}";
+            if (isCleared)
+                statusText.text = "Clear!";
+            else
+                statusText.text = $"{currentCorrect} / {totalTargets}";
         }
     }
 
-    // すべて正解したときの処理
     void OnClear()
     {
         isCleared = true;
+        canGoNext = true;
+
         Debug.Log("🎉 すべてのアイテムが正しく配置されました！");
 
         if (doorAnimator != null)
-        {
             doorAnimator.SetTrigger("Open");
-        }
 
         if (door != null)
-        {
             door.transform.rotation = Quaternion.Euler(0, 90, 0);
-        }
 
         if (victorySE != null)
-        {
             victorySE.Play();
-        }
 
-        // テキストも更新（任意で "Clear!" にするなど）
-        if (statusText != null)
+        if (nextButton != null)
+            nextButton.SetActive(true);
+
+        UpdateStatusText();
+    }
+
+    // 他スクリプト用：通過OKかどうか
+    public bool CanGoNext()
+    {
+        return canGoNext;
+    }
+
+    // 他スクリプトやUIボタンから呼び出す
+    public void LoadNextStage()
+    {
+        if (!string.IsNullOrEmpty(nextStageName))
         {
-            statusText.text = "Clear!";
+            Debug.Log($"次のステージへ移動: {nextStageName}");
+            SceneManager.LoadScene(nextStageName);
+        }
+        else
+        {
+            Debug.LogWarning("次のステージ名が設定されていません！");
         }
     }
 }
