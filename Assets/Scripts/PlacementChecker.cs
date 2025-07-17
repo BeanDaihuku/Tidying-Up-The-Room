@@ -1,3 +1,4 @@
+//2323012_endou_kusei
 using UnityEngine;
 
 public class PlacementChecker : MonoBehaviour
@@ -20,12 +21,13 @@ public class PlacementChecker : MonoBehaviour
 
     private GameObject currentObject; // トリガー中のオブジェクト保存
 
+    private ColorSwitcher colorSwitcher; // 色変更制御スクリプト参照
+
     void Start()
     {
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null)
         {
-            // 自動でAudioSource追加
             audioSource = gameObject.AddComponent<AudioSource>();
         }
     }
@@ -47,15 +49,21 @@ public class PlacementChecker : MonoBehaviour
                     isCorrect = true;
                     gameManager?.ReportCorrect();
 
-                    // 正解演出
+                    // 色変化処理
+                    colorSwitcher = currentObject.GetComponent<ColorSwitcher>();
+                    if (colorSwitcher != null) colorSwitcher.SetCorrect();
+
                     PlayCorrectEffect(currentObject);
                 }
             }
             else if (isCorrect)
             {
-                // 正解状態を解除
                 isCorrect = false;
                 gameManager?.ReportCancel();
+
+                colorSwitcher = currentObject.GetComponent<ColorSwitcher>();
+                if (colorSwitcher != null) colorSwitcher.ResetToWhite();
+
                 ResetEffect(currentObject);
             }
 
@@ -69,50 +77,30 @@ public class PlacementChecker : MonoBehaviour
         {
             isCorrect = false;
             gameManager?.ReportCancel();
+
+            colorSwitcher = other.GetComponent<ColorSwitcher>();
+            if (colorSwitcher != null) colorSwitcher.ResetToWhite();
+
             ResetEffect(other.gameObject);
         }
     }
 
-    // 正解時の演出（色変更＋音）
     void PlayCorrectEffect(GameObject obj)
     {
-        var rend = obj.GetComponent<Renderer>();
-        if (rend != null)
-        {
-            rend.material.color = Color.green; // 色変更（仮）
-        }
-
         if (correctSE != null && audioSource != null)
         {
             audioSource.PlayOneShot(correctSE);
         }
+
+        if (effectPrefab != null)
+        {
+            GameObject effect = Instantiate(effectPrefab, obj.transform.position + Vector3.up * 0.2f, Quaternion.identity);
+            effect.transform.SetParent(obj.transform); // 追従
+        }
     }
 
-    // リセット時の演出
     void ResetEffect(GameObject obj)
     {
-        var rend = obj.GetComponent<Renderer>();
-        if (rend != null)
-        {
-            rend.material.color = Color.white; // 元の色に戻す（仮）
-        }
-
-            // 音を鳴らす
-            if (correctSE != null && audioSource != null)
-            {
-                audioSource.PlayOneShot(correctSE);
-            }
-
-            // パーティクルを出す
-            if (effectPrefab != null)
-            {
-                GameObject effect = Instantiate(effectPrefab, obj.transform.position + Vector3.up * 0.2f, Quaternion.identity);
-                effect.transform.SetParent(obj.transform); // 追従させる！
-
-        }
-
+        // パーティクルや音のリセット（必要に応じて追加）
     }
-
-
-
 }
