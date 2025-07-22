@@ -76,8 +76,8 @@ public class GameManager : MonoBehaviour
         if (doorAnimator != null)
             doorAnimator.SetTrigger("Open");
 
-        if (door != null)
-            door.transform.rotation = Quaternion.Euler(0, 90, 0);
+        /*if (door != null)
+            door.transform.rotation = Quaternion.Euler(0, 90, 0);*/
 
         if (victorySE != null)
             victorySE.Play();
