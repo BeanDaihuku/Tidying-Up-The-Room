@@ -5,6 +5,8 @@ using UnityEngine.InputSystem;
 
 public class PlayerJump : MonoBehaviour
 {
+    //https://www.youtube.com/watch?v=Xf2eDfLxcB8
+
     [SerializeField] private InputActionProperty jumpButton;
     [SerializeField] private float jumpHeight = 3f;
     [SerializeField] private CharacterController cc;
